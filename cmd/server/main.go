@@ -15,6 +15,7 @@ import (
 	db "github.com/adityaonrepeat/user-management-api/db/sqlc"
 	"github.com/adityaonrepeat/user-management-api/internal/handler"
 	"github.com/adityaonrepeat/user-management-api/internal/logger"
+	"github.com/adityaonrepeat/user-management-api/internal/middleware"
 	"github.com/adityaonrepeat/user-management-api/internal/repository"
 	"github.com/adityaonrepeat/user-management-api/internal/routes"
 	"github.com/adityaonrepeat/user-management-api/internal/service"
@@ -54,6 +55,9 @@ func main() {
 		DisableStartupMessage: true,
 		ErrorHandler:          handler.ErrorHandler(log),
 	})
+
+	app.Use(middleware.RequestID())
+	app.Use(middleware.RequestLogger(log))
 
 	app.Get("/health", func(c *fiber.Ctx) error {
 		if err := pool.Ping(c.UserContext()); err != nil {
