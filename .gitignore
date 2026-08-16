@@ -1,0 +1,24 @@
+# Compiled binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+user-management-api
+
+# Test and coverage output
+*.test
+coverage.out
+coverage.html
+
+# Environment
+.env
+.env.local
+
+# Editor and OS
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
