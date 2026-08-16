@@ -12,7 +12,12 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/adityaonrepeat/user-management-api/config"
+	db "github.com/adityaonrepeat/user-management-api/db/sqlc"
+	"github.com/adityaonrepeat/user-management-api/internal/handler"
 	"github.com/adityaonrepeat/user-management-api/internal/logger"
+	"github.com/adityaonrepeat/user-management-api/internal/repository"
+	"github.com/adityaonrepeat/user-management-api/internal/routes"
+	"github.com/adityaonrepeat/user-management-api/internal/service"
 )
 
 func main() {
@@ -40,18 +45,25 @@ func main() {
 	}
 	log.Info("connected to database")
 
+	userRepository := repository.NewUserRepository(db.New(pool))
+	userService := service.NewUserService(userRepository)
+	userHandler := handler.NewUserHandler(userService)
+
 	app := fiber.New(fiber.Config{
 		AppName:               "user-management-api",
 		DisableStartupMessage: true,
+		ErrorHandler:          handler.ErrorHandler(log),
 	})
 
 	app.Get("/health", func(c *fiber.Ctx) error {
 		if err := pool.Ping(c.UserContext()); err != nil {
 			log.Error("health check failed", zap.Error(err))
-			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"status": "unavailable"})
+			return fiber.NewError(fiber.StatusServiceUnavailable, "database unreachable")
 		}
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
+
+	routes.Register(app, userHandler)
 
 	go func() {
 		addr := ":" + cfg.ServerPort
