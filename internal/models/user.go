@@ -20,6 +20,12 @@ type UpdateUserRequest struct {
 	DOB  string `json:"dob"  validate:"required,datetime=2006-01-02"`
 }
 
+type ListParams struct {
+	Paginated bool
+	Limit     int32
+	Offset    int32
+}
+
 type UserResponse struct {
 	ID   int32  `json:"id"`
 	Name string `json:"name"`

@@ -42,10 +42,25 @@ func (s *UserService) GetByID(ctx context.Context, id int32) (models.UserWithAge
 	return toResponseWithAge(u, time.Now().UTC()), nil
 }
 
-func (s *UserService) List(ctx context.Context) ([]models.UserWithAgeResponse, error) {
-	users, err := s.repo.List(ctx)
-	if err != nil {
-		return nil, err
+func (s *UserService) List(ctx context.Context, params models.ListParams) ([]models.UserWithAgeResponse, int64, error) {
+	var (
+		users []models.User
+		total int64
+		err   error
+	)
+
+	if params.Paginated {
+		if users, err = s.repo.ListPaginated(ctx, params.Limit, params.Offset); err != nil {
+			return nil, 0, err
+		}
+		if total, err = s.repo.Count(ctx); err != nil {
+			return nil, 0, err
+		}
+	} else {
+		if users, err = s.repo.List(ctx); err != nil {
+			return nil, 0, err
+		}
+		total = int64(len(users))
 	}
 
 	now := time.Now().UTC()
@@ -54,7 +69,7 @@ func (s *UserService) List(ctx context.Context) ([]models.UserWithAgeResponse, e
 	for _, u := range users {
 		out = append(out, toResponseWithAge(u, now))
 	}
-	return out, nil
+	return out, total, nil
 }
 
 func (s *UserService) Update(ctx context.Context, id int32, req models.UpdateUserRequest) (models.UserResponse, error) {

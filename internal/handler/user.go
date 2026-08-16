@@ -1,12 +1,19 @@
 package handler
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/adityaonrepeat/user-management-api/internal/models"
 	"github.com/adityaonrepeat/user-management-api/internal/service"
+)
+
+const (
+	totalCountHeader = "X-Total-Count"
+	defaultLimit     = 10
+	maxLimit         = 100
 )
 
 type UserHandler struct {
@@ -47,10 +54,17 @@ func (h *UserHandler) GetByID(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) List(c *fiber.Ctx) error {
-	res, err := h.svc.List(c.UserContext())
+	params, err := parseListParams(c)
+	if err != nil {
+		return err
+	}
+
+	res, total, err := h.svc.List(c.UserContext(), params)
 	if err != nil {
 		return mapServiceError(err)
 	}
+
+	c.Set(totalCountHeader, strconv.FormatInt(total, 10))
 	return c.JSON(res)
 }
 
@@ -85,6 +99,36 @@ func (h *UserHandler) Delete(c *fiber.Ctx) error {
 		return mapServiceError(err)
 	}
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func parseListParams(c *fiber.Ctx) (models.ListParams, error) {
+	rawLimit, rawOffset := c.Query("limit"), c.Query("offset")
+
+	if rawLimit == "" && rawOffset == "" {
+		return models.ListParams{}, nil
+	}
+
+	params := models.ListParams{Paginated: true, Limit: defaultLimit}
+
+	if rawLimit != "" {
+		v, err := strconv.ParseInt(rawLimit, 10, 32)
+		if err != nil || v < 1 || v > maxLimit {
+			return models.ListParams{}, fiber.NewError(fiber.StatusBadRequest,
+				fmt.Sprintf("limit must be an integer between 1 and %d", maxLimit))
+		}
+		params.Limit = int32(v)
+	}
+
+	if rawOffset != "" {
+		v, err := strconv.ParseInt(rawOffset, 10, 32)
+		if err != nil || v < 0 {
+			return models.ListParams{}, fiber.NewError(fiber.StatusBadRequest,
+				"offset must be a non-negative integer")
+		}
+		params.Offset = int32(v)
+	}
+
+	return params, nil
 }
 
 func parseID(c *fiber.Ctx) (int32, error) {

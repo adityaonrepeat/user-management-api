@@ -13,6 +13,16 @@ SELECT id, name, dob
 FROM users
 ORDER BY id;
 
+-- name: ListUsersPaginated :many
+SELECT id, name, dob
+FROM users
+ORDER BY id
+LIMIT $1 OFFSET $2;
+
+-- name: CountUsers :one
+SELECT count(*)
+FROM users;
+
 -- name: UpdateUser :one
 UPDATE users
 SET name = $2,

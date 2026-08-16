@@ -54,6 +54,27 @@ func (r *UserRepository) List(ctx context.Context) ([]models.User, error) {
 	return users, nil
 }
 
+func (r *UserRepository) ListPaginated(ctx context.Context, limit, offset int32) ([]models.User, error) {
+	rows, err := r.q.ListUsersPaginated(ctx, db.ListUsersPaginatedParams{Limit: limit, Offset: offset})
+	if err != nil {
+		return nil, fmt.Errorf("list users paginated: %w", err)
+	}
+
+	users := make([]models.User, 0, len(rows))
+	for _, u := range rows {
+		users = append(users, toModel(u))
+	}
+	return users, nil
+}
+
+func (r *UserRepository) Count(ctx context.Context) (int64, error) {
+	total, err := r.q.CountUsers(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count users: %w", err)
+	}
+	return total, nil
+}
+
 func (r *UserRepository) Update(ctx context.Context, id int32, name string, dob time.Time) (models.User, error) {
 	u, err := r.q.UpdateUser(ctx, db.UpdateUserParams{ID: id, Name: name, Dob: dob})
 	if errors.Is(err, pgx.ErrNoRows) {
