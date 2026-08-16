@@ -1,0 +1,16 @@
+.git
+.gitignore
+.dockerignore
+
+bin/
+*.exe
+*.test
+coverage.out
+
+.env
+.env.local
+
+*.md
+
+.idea/
+.vscode/
