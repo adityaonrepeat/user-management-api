@@ -18,11 +18,6 @@ Under development. Setup and run instructions will be added as the implementatio
 | Logging | [Uber Zap](https://github.com/uber-go/zap) |
 | Validation | [go-playground/validator](https://github.com/go-playground/validator) |
 
-## Documentation
-
-- [`system-design.md`](system-design.md) — architecture, request flow, and design trade-offs
-- [`codebase.md`](codebase.md) — package-by-package guide to the code
-
 ## Setup
 
 To be written once the implementation is runnable.
